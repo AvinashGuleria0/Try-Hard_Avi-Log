@@ -11,6 +11,7 @@ import { AVILOG_VERSION } from "./index.js";
 import { runBenchSuite } from "./modes/benchMode.js";
 import { runCiMode } from "./modes/ciMode.js";
 import { runWatchMode } from "./modes/watchMode.js";
+import { startUiServer } from "./server/uiServer.js";
 import type { CliOptions, PromptTarget } from "./types/core.js";
 
 const VALID_TARGETS = new Set<PromptTarget>(["cursor", "claude", "gemini", "issue", "raw"]);
@@ -135,10 +136,20 @@ function printDiagnosisCard(output: PipelineOutput): void {
   console.error("└─────────────────────────────────────────────────────────────────────────┘");
 }
 
+async function launchWebUi(output: PipelineOutput): Promise<void> {
+  const handle = await startUiServer(output, 4321);
+  console.error(`\n[avilog] Web Inspector running at ${handle.url} (press Ctrl+C to stop)`);
+  await new Promise<void>((resolveStop) => {
+    process.once("SIGINT", () => {
+      void handle.close().then(resolveStop);
+    });
+  });
+}
+
 async function promptInteractiveActions(output: PipelineOutput): Promise<void> {
   if (!process.stdin.isTTY || !process.stdout.isTTY) return;
 
-  console.error("[a] Apply Patch   [c] Re-copy AI Prompt   [q] Quit");
+  console.error("[a] Apply Patch   [c] Re-copy AI Prompt   [u] Open in Web UI   [q] Quit");
   const rl = createInterface({ input: process.stdin, output: process.stderr });
   const answer = await new Promise<string>((resolveAnswer) => {
     rl.question("> ", (ans) => {
@@ -150,6 +161,8 @@ async function promptInteractiveActions(output: PipelineOutput): Promise<void> {
   if (answer === "c") {
     const ok = copyToClipboard(output.diagnosis.targetPrompt);
     console.error(ok ? "Copied AI prompt to clipboard." : "Clipboard unavailable.");
+  } else if (answer === "u") {
+    await launchWebUi(output);
   } else if (answer === "a") {
     if (!output.diagnosis.unifiedDiff) {
       console.error("No unified diff was generated for this diagnosis. Use the clipboard prompt instead.");
@@ -277,7 +290,11 @@ export async function runCli(argv: string[]): Promise<number> {
       fresh: opts.fresh
     });
     printDiagnosisCard(output);
-    await promptInteractiveActions(output);
+    if (opts.ui) {
+      await launchWebUi(output);
+    } else {
+      await promptInteractiveActions(output);
+    }
     return 0;
   }
 
@@ -290,6 +307,9 @@ export async function runCli(argv: string[]): Promise<number> {
       fresh: opts.fresh
     });
     printDiagnosisCard(output);
+    if (opts.ui) {
+      await launchWebUi(output);
+    }
     return 0;
   }
 
@@ -304,7 +324,11 @@ export async function runCli(argv: string[]): Promise<number> {
       fresh: opts.fresh
     });
     printDiagnosisCard(output);
-    await promptInteractiveActions(output);
+    if (opts.ui) {
+      await launchWebUi(output);
+    } else {
+      await promptInteractiveActions(output);
+    }
     return exitCode;
   }
 
