@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Databases & local state
+*.db
+*.db-journal
+*.sqlite
+.avilog/
+
+# Logs & OS files
+*.log
+.DS_Store
+Thumbs.db
+
+# Coverage & test artifacts
+coverage/
+playwright-report/
+test-results/
