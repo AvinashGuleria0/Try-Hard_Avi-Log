@@ -147,7 +147,7 @@ async function launchWebUi(output: PipelineOutput): Promise<void> {
 }
 
 async function promptInteractiveActions(output: PipelineOutput): Promise<void> {
-  if (!process.stdin.isTTY || !process.stdout.isTTY) return;
+  if (!process.stdin.isTTY || !process.stdout.isTTY || process.env.CI || process.env.NODE_ENV === "test") return;
 
   console.error("[a] Apply Patch   [c] Re-copy AI Prompt   [u] Open in Web UI   [q] Quit");
   const rl = createInterface({ input: process.stdin, output: process.stderr });
@@ -214,7 +214,8 @@ async function runWrapCommand(command: string[]): Promise<{ exitCode: number; ca
   return { exitCode, capturedOutput: chunks.join("") };
 }
 
-export async function runCli(argv: string[]): Promise<number> {
+export async function runCli(argv: string[], options?: { interactive?: boolean }): Promise<number> {
+  const interactive = options?.interactive ?? true;
   const opts = parseCliArgs(argv);
 
   if (opts.mode === "version") {
@@ -292,7 +293,7 @@ export async function runCli(argv: string[]): Promise<number> {
     printDiagnosisCard(output);
     if (opts.ui) {
       await launchWebUi(output);
-    } else {
+    } else if (interactive) {
       await promptInteractiveActions(output);
     }
     return 0;
@@ -326,7 +327,7 @@ export async function runCli(argv: string[]): Promise<number> {
     printDiagnosisCard(output);
     if (opts.ui) {
       await launchWebUi(output);
-    } else {
+    } else if (interactive) {
       await promptInteractiveActions(output);
     }
     return exitCode;

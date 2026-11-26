@@ -80,10 +80,12 @@ describe("CLI, modes, SDK, and E2E pipeline", () => {
   });
 
   test("wrapper mode returns 0 on passing command and diagnoses failing mock-test script", async () => {
-    const okCode = await runCli(["--", "bun", "--version"]);
+    const okCode = await runCli(["--", "bun", "--version"], { interactive: false });
     expect(okCode).toBe(0);
 
-    const failCode = await runCli(["--", "bun", "run", join(MOCK_TEST_DIR, "null-crash.ts")]);
+    const failCode = await runCli(["--", "bun", "run", join(MOCK_TEST_DIR, "null-crash.ts")], {
+      interactive: false
+    });
     expect(failCode).not.toBe(0);
   });
 
