@@ -1,0 +1,35 @@
+{
+  "name": "avilog",
+  "version": "0.1.0",
+  "description": "Deterministic log compaction, root-cause pinpointing, and context-aware AI fix prompt engine",
+  "type": "module",
+  "bin": {
+    "avilog": "./dist/cli.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "bun build src/cli.ts --outdir dist --target node --format esm && bun build src/index.ts --outdir dist --target node --format esm && tsc -p tsconfig.build.json --emitDeclarationOnly --declaration --outDir dist --noEmit false",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "keywords": [
+    "cli",
+    "logs",
+    "debugging",
+    "ai",
+    "stack-trace",
+    "compactor",
+    "bun"
+  ],
+  "license": "MIT"
+}
